@@ -1,0 +1,9 @@
+{
+  "name": "replit-zen-proxy",
+  "version": "1.0.0",
+  "description": "OpenCode Zen reverse proxy running on Replit (US egress IP). Requires x-proxy-token header.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  }
+}
