@@ -16,6 +16,12 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ ok: true }));
     return;
   }
+  // Web entry page (for Replit publishing recognition)
+  if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>Zen Proxy</title></head><body style="font-family:system-ui;max-width:600px;margin:80px auto;padding:0 20px"><h1>Zen Proxy</h1><p>OpenCode Zen 免费模型反向代理（部署于 Replit，美国出口 IP）。</p><p>代理接口位于 <code>/v1/chat/completions</code>，需携带 <code>x-proxy-token</code> 请求头。</p><p style="color:#16a34a">✓ 服务运行中</p></body></html>`);
+    return;
+  }
   // Auth: x-proxy-token header must match
   if (req.headers['x-proxy-token'] !== TOKEN) {
     res.writeHead(401, { 'Content-Type': 'application/json' });
