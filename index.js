@@ -1,10 +1,22 @@
 const http = require('http');
 const https = require('https');
 
-const TOKEN = process.env.REQ_TOKEN || 'ocpool-secret-2026';
+const TOKEN = process.env.REQ_TOKEN || '';
+const PORT = process.env.PORT || 3000;
+
+if (!TOKEN) {
+  console.error('ERROR: REQ_TOKEN not set. Add it in Replit Secrets.');
+  process.exit(1);
+}
 
 const server = http.createServer((req, res) => {
-  // 鉴权：请求头 x-proxy-token 必须匹配
+  // Health check for Replit deployment
+  if (req.method === 'GET' && req.url === '/healthz') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+  // Auth: x-proxy-token header must match
   if (req.headers['x-proxy-token'] !== TOKEN) {
     res.writeHead(401, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'unauthorized' }));
@@ -39,6 +51,6 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(7860, '0.0.0.0', () => {
-  console.log('[replit-proxy] listening on 7860, egress = Replit US IP');
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`[replit-proxy] listening on 0.0.0.0:${PORT}, egress = Replit US IP`);
 });

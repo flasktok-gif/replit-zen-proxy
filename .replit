@@ -1,0 +1,8 @@
+entrypoint = "index.js"
+run = "npm start"
+onBoot = "npm install"
+
+[deployment]
+build = ["sh", "-c", "npm install"]
+run = ["sh", "-c", "npm start"]
+deploymentTarget = "cloudrun"
