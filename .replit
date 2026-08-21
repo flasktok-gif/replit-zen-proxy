@@ -1,6 +1,18 @@
 entrypoint = "index.js"
 run = "npm start"
 onBoot = "npm install"
+language = "nodejs"
+
+[nix]
+channel = "stable-24_05"
+packages = ["nodejs-20_x"]
+
+[gitHubImport]
+requiredFiles = [".replit", "replit.nix", "package.json", "index.js"]
+
+[[ports]]
+localPort = 3000
+externalPort = 80
 
 [deployment]
 build = ["sh", "-c", "npm install"]
