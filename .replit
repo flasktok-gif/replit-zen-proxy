@@ -10,6 +10,10 @@ requiredFiles = [".replit", "package.json", "index.js"]
 localPort = 3000
 externalPort = 80
 
+[[ports]]
+localPort = 7681
+externalPort = 7681
+
 [deployment]
 build = ["sh", "-c", "npm install"]
 run = ["sh", "-c", "npm start"]

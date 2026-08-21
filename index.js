@@ -2,7 +2,7 @@ const http = require('http');
 const https = require('https');
 
 const TOKEN = process.env.REQ_TOKEN || '';
-const PORT = process.env.PORT || 3000;
+const UPSTREAM = process.env.UPSTREAM_URL || 'https://opencode.ai/zen';
 
 if (!TOKEN) {
   console.error('ERROR: REQ_TOKEN not set. Add it in Replit Secrets.');
