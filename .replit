@@ -1,20 +1,24 @@
 entrypoint = "index.js"
-run = "npm start"
-onBoot = "npm install"
+run = "bash start.sh"
+onBoot = "bash start.sh"
 language = "nodejs"
 
 [nix]
 channel = "stable-24_05"
-packages = ["nodejs-20_x"]
+packages = ["nodejs-20_x", "ttyd"]
 
 [gitHubImport]
-requiredFiles = [".replit", "replit.nix", "package.json", "index.js"]
+requiredFiles = [".replit", "replit.nix", "package.json", "index.js", "start.sh"]
 
 [[ports]]
 localPort = 3000
 externalPort = 80
 
+[[ports]]
+localPort = 7681
+externalPort = 7681
+
 [deployment]
-build = ["sh", "-c", "npm install"]
-run = ["sh", "-c", "npm start"]
+build = ["sh", "-c", "npm install && chmod +x start.sh"]
+run = ["sh", "-c", "bash start.sh"]
 deploymentTarget = "cloudrun"
