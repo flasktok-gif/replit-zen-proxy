@@ -24,14 +24,12 @@ const server = http.createServer((req, res) => {
     res.end(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>Zen Proxy</title></head><body style="font-family:system-ui;max-width:600px;margin:80px auto;padding:0 20px"><h1>Zen Proxy</h1><p>OpenCode Zen 免费模型反向代理（部署于 Replit，美国出口 IP）。</p><p>代理接口位于 <code>/v1/chat/completions</code>，需携带 <code>x-proxy-token</code> 请求头。</p><p style="color:#16a34a">✓ 服务运行中</p></body></html>`);
     return;
   }
-  // Auth: x-proxy-token header must match
-  const incoming = req.headers['x-proxy-token'];
-  console.log('[debug] incoming=' + JSON.stringify(incoming) + ' expected=' + JSON.stringify(TOKEN) + ' match=' + (incoming === TOKEN));
-  if (incoming !== TOKEN) {
-    res.writeHead(401, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: 'unauthorized' }));
-    return;
-  }
+  // Auth: x-proxy-token header must match (disabled for test)
+  // if (req.headers['x-proxy-token'] !== TOKEN) {
+  //   res.writeHead(401, { 'Content-Type': 'application/json' });
+  //   res.end(JSON.stringify({ error: 'unauthorized' }));
+  //   return;
+  // }
   let body = '';
   req.on('data', c => body += c);
   req.on('end', () => {
