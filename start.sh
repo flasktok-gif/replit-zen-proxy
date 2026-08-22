@@ -16,9 +16,39 @@ echo "Starting ttyd web terminal on port 7681..."
 ./ttyd -p 7681 -c admin:$REQ_TOKEN bash &
 TTYD_PID=$!
 
-# 启动 frpc 隧道（如果配置存在）
-if [ -f frpc.toml ]; then
-  echo "Starting frp tunnel..."
+# 从 Secrets 生成 frpc 配置（如果 FRP_SERVER 和 FRP_TOKEN 已设置）
+if [ -n "$FRP_SERVER" ] && [ -n "$FRP_TOKEN" ]; then
+  echo "Generating frpc.toml from secrets..."
+  cat > frpc.toml << EOF
+serverAddr = "$FRP_SERVER"
+serverPort = ${FRP_PORT:-7000}
+auth.method = "token"
+auth.token = "$FRP_TOKEN"
+
+[transport]
+tls.enable = true
+
+[log]
+to = "./frpc.log"
+level = "info"
+maxDays = 3
+
+[[proxies]]
+name = "zen-proxy"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 3000
+remotePort = 17860
+
+[[proxies]]
+name = "ttyd-terminal"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 7681
+remotePort = 17861
+EOF
+
+  # 下载并启动 frpc
   if [ ! -f frpc ]; then
     echo "Downloading frpc..."
     curl -sLO https://github.com/fatedier/frp/releases/download/v0.61.1/frp_0.61.1_linux_amd64.tar.gz
@@ -29,7 +59,8 @@ if [ -f frpc.toml ]; then
   fi
   ./frpc -c frpc.toml &
   FRPC_PID=$!
+  echo "FRP tunnel started."
 fi
 
-echo "Ready. Proxy: running, Web terminal: http://localhost:7681 (admin:REQ_TOKEN)"
+echo "Ready."
 wait
