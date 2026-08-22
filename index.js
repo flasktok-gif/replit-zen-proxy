@@ -9,6 +9,7 @@ if (!TOKEN) {
   console.error('ERROR: REQ_TOKEN not set.');
   process.exit(1);
 }
+console.log('[debug] TOKEN resolved:', TOKEN === '1234567' ? 'MATCH' : 'DIFFERENT:' + TOKEN);
 
 const server = http.createServer((req, res) => {
   // Health check for Replit deployment
