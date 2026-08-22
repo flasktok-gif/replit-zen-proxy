@@ -25,8 +25,9 @@ const server = http.createServer((req, res) => {
     return;
   }
   // Auth: x-proxy-token header must match
-  console.log('[debug] headers:', JSON.stringify(req.headers));
-  if (req.headers['x-proxy-token'] !== TOKEN) {
+  const incoming = req.headers['x-proxy-token'];
+  console.log('[debug] incoming=' + JSON.stringify(incoming) + ' expected=' + JSON.stringify(TOKEN) + ' match=' + (incoming === TOKEN));
+  if (incoming !== TOKEN) {
     res.writeHead(401, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'unauthorized' }));
     return;
