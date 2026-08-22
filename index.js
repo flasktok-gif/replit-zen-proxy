@@ -44,6 +44,8 @@ const server = http.createServer((req, res) => {
     };
     options.headers['User-Agent'] = 'opencode/1.18.18 ai-sdk/provider-utils/4.0.23 runtime/node.js/24';
     delete options.headers['x-proxy-token'];
+    delete options.headers['host'];
+    delete options.headers['content-length'];
     const proxyReq = https.request(options, (proxyRes) => {
       res.writeHead(proxyRes.statusCode, proxyRes.headers);
       proxyRes.pipe(res);
