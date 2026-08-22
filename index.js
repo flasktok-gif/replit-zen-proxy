@@ -1,7 +1,7 @@
 const http = require('http');
 const https = require('https');
 
-const TOKEN = process.env.REQ_TOKEN || Buffer.from('MTIzNDU2Nw==', 'base64').toString();
+const TOKEN = process.env.REQ_TOKEN || '1234567';
 const PORT = process.env.PORT || 3000;
 const UPSTREAM = process.env.UPSTREAM_URL || 'https://opencode.ai/zen';
 
