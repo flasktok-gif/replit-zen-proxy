@@ -37,14 +37,14 @@ const server = http.createServer((req, res) => {
       hostname: target.hostname,
       port: 443,
       path: target.pathname + target.search,
-      method: req.method,
-      headers: req.headers,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'opencode/1.18.18 ai-sdk/provider-utils/4.0.23 runtime/node.js/24',
+      },
       timeout: 120000
     };
-    options.headers['User-Agent'] = 'opencode/1.18.18 ai-sdk/provider-utils/4.0.23 runtime/node.js/24';
-    delete options.headers['x-proxy-token'];
-    delete options.headers['host'];
-    delete options.headers['content-length'];
+    if (req.headers['authorization']) options.headers['Authorization'] = req.headers['authorization'];
     const proxyReq = https.request(options, (proxyRes) => {
       res.writeHead(proxyRes.statusCode, proxyRes.headers);
       proxyRes.pipe(res);
