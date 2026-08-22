@@ -2,6 +2,7 @@ const http = require('http');
 const https = require('https');
 
 const TOKEN = process.env.REQ_TOKEN || '';
+const PORT = process.env.PORT || 3000;
 const UPSTREAM = process.env.UPSTREAM_URL || 'https://opencode.ai/zen';
 
 if (!TOKEN) {
@@ -31,7 +32,7 @@ const server = http.createServer((req, res) => {
   let body = '';
   req.on('data', c => body += c);
   req.on('end', () => {
-    const target = new URL('https://opencode.ai/zen' + req.url);
+    const target = new URL(UPSTREAM + req.url);
     const options = {
       hostname: target.hostname,
       port: 443,
