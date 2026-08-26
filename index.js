@@ -1,5 +1,6 @@
 const http = require('http');
 const https = require('https');
+const net = require('net');
 
 const TOKEN = process.env.REQ_TOKEN || '1234567';
 const PORT = process.env.PORT || 3000;
@@ -20,7 +21,28 @@ const server = http.createServer((req, res) => {
   // Web entry page (for Replit publishing recognition)
   if (req.method === 'GET' && (req.url === '/' || req.url === '/index.html')) {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>Zen Proxy</title></head><body style="font-family:system-ui;max-width:600px;margin:80px auto;padding:0 20px"><h1>Zen Proxy</h1><p>OpenCode Zen 免费模型反向代理（部署于 Replit，美国出口 IP）。</p><p>代理接口位于 <code>/v1/chat/completions</code>，需携带 <code>x-proxy-token</code> 请求头。</p><p style="color:#16a34a">✓ 服务运行中</p></body></html>`);
+    res.end(`<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>Zen Proxy</title></head><body style="font-family:system-ui;max-width:600px;margin:80px auto;padding:0 20px"><h1>Zen Proxy</h1><p>OpenCode Zen 免费模型反向代理 + 标准 HTTP 代理（部署于 Replit，美国出口 IP）。</p><p>反代接口 <code>/v1/chat/completions</code>，标准代理用 <code>CONNECT</code> 隧道。</p><p style="color:#16a34a">✓ 服务运行中</p></body></html>`);
+    return;
+  }
+  // 标准 HTTP 代理：CONNECT 隧道（支持任意目标）
+  if (req.method === 'CONNECT') {
+    const auth = req.headers['x-proxy-token'] || (req.headers['proxy-authorization'] || '').replace(/^Basic\s+/i, '');
+    if (auth !== TOKEN) {
+      res.writeHead(401, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'unauthorized' }));
+      return;
+    }
+    const [host, port] = req.url.split(':');
+    const targetPort = parseInt(port, 10) || 443;
+    const upstream = net.connect(targetPort, host, () => {
+      res.writeHead(200, { 'Connection': 'keep-alive' });
+      upstream.pipe(res);
+      res.pipe(upstream);
+    });
+    upstream.on('error', () => {
+      res.writeHead(502, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ error: 'CONNECT failed' }));
+    });
     return;
   }
   // Auth: x-proxy-token header must match
