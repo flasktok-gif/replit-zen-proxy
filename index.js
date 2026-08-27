@@ -54,6 +54,40 @@ const server = http.createServer((req, res) => {
   let body = '';
   req.on('data', c => body += c);
   req.on('end', () => {
+    // /forward 端点：从 x-proxy-target 头读目标，转发到任意网址（通用出口）
+    if (req.url === '/forward' || req.url === '/api/v1/forward') {
+      const targetUrl = req.headers['x-proxy-target'];
+      if (!targetUrl) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'x-proxy-target header required' }));
+        return;
+      }
+      const target = new URL(targetUrl);
+      const options = {
+        hostname: target.hostname,
+        port: target.port || (target.protocol === 'https:' ? 443 : 80),
+        path: target.pathname + target.search,
+        method: req.method || 'POST',
+        headers: { 'Content-Type': req.headers['content-type'] || 'application/json' },
+        timeout: 120000
+      };
+      if (req.headers['authorization']) options.headers['Authorization'] = req.headers['authorization'];
+      if (req.headers['accept']) options.headers['Accept'] = req.headers['accept'];
+      const mod = target.protocol === 'https:' ? https : http;
+      const proxyReq = mod.request(options, (proxyRes) => {
+        res.writeHead(proxyRes.statusCode, proxyRes.headers);
+        proxyRes.pipe(res);
+      });
+      proxyReq.on('error', (e) => {
+        console.log('forward error:', e.message);
+        res.writeHead(502, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: e.message }));
+      });
+      proxyReq.on('timeout', () => proxyReq.destroy());
+      proxyReq.write(body);
+      proxyReq.end();
+      return;
+    }
     const target = new URL(UPSTREAM + req.url);
     const options = {
       hostname: target.hostname,
