@@ -1,19 +1,58 @@
 version: 2.1
 
-orbs:
-  win: circleci/windows@5.0
-
 jobs:
-  build:
-    executor: win/default
+  rdp:
+    machine:
+      image: 'windows-server-2022-gui:current'
+    resource_class: windows.medium
+    shell: powershell.exe -ExecutionPolicy Bypass
     steps:
       - checkout
-      - run: Write-Host 'Hello, Windows!'
-      - run: systeminfo | Select-String "OS Name"
-      - run: whoami
-      - run: Get-ComputerInfo | Select-Object CsProcessors, CsTotalPhysicalMemory
+      
+      - run:
+          name: Enable RDP
+          command: |
+            Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+            Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+            Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 0
+
+      - run:
+          name: Create RDP user
+          command: |
+            $Password = ConvertTo-SecureString "P@ssw0rd1qazXSW@#" -AsPlainText -Force
+            New-LocalUser -Name "circleci" -Password $Password -PasswordNeverExpires -ErrorAction SilentlyContinue
+            Add-LocalGroupMember -Group "Administrators" -Member "circleci" -ErrorAction SilentlyContinue
+
+      - run:
+          name: Install Tailscale
+          command: |
+            Invoke-WebRequest "https://pkgs.tailscale.com/stable/tailscale-setup-latest-amd64.msi" -OutFile "C:\tailscale.msi"
+            Start-Process msiexec -ArgumentList "/i C:\tailscale.msi /quiet /norestart" -Wait
+
+      - run:
+          name: Connect Tailscale and print info
+          command: |
+            Start-Sleep -Seconds 5
+            & "C:\Program Files\Tailscale\tailscale.exe" up --authkey="$Env:TAILSCALE_AUTHKEY" --hostname="circleci-rdp"
+            Start-Sleep -Seconds 10
+            $ts_ip = & "C:\Program Files\Tailscale\tailscale.exe" ip -4
+            Write-Host "=========================================="
+            Write-Host "  RDP READY"
+            Write-Host "  Tailscale IP: $ts_ip"
+            Write-Host "  Username: circleci"
+            Write-Host "  Password: P@ssw0rd1qazXSW@#"
+            Write-Host "  >> Open mstsc, connect to: $ts_ip"
+            Write-Host "=========================================="
+
+      - run:
+          name: Keep alive (120 min)
+          command: |
+            for ($i = 1; $i -le 120; $i++) {
+              Start-Sleep -Seconds 60
+              Write-Host "[$i/120] running..."
+            }
 
 workflows:
   my-workflow:
     jobs:
-      - build
+      - rdp
