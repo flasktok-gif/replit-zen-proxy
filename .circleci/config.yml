@@ -19,9 +19,10 @@ jobs:
       - run:
           name: Create RDP user
           command: |
-            $Password = ConvertTo-SecureString "P@ssw0rd1qazXSW@#" -AsPlainText -Force
-            New-LocalUser -Name "circleci" -Password $Password -PasswordNeverExpires -ErrorAction SilentlyContinue
-            Add-LocalGroupMember -Group "Administrators" -Member "circleci" -ErrorAction SilentlyContinue
+            net user circleci "P@ssw0rd1qazXSW@#" /add /y 2>$null
+            net user circleci "P@ssw0rd1qazXSW@#"
+            net localgroup Administrators circleci /add 2>$null
+            exit 0
 
       - run:
           name: Install Tailscale
