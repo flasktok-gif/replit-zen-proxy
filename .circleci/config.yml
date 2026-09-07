@@ -1,0 +1,19 @@
+version: 2.1
+
+orbs:
+  win: circleci/windows@5.0
+
+jobs:
+  build:
+    executor: win/default
+    steps:
+      - checkout
+      - run: Write-Host 'Hello, Windows!'
+      - run: systeminfo | Select-String "OS Name"
+      - run: whoami
+      - run: Get-ComputerInfo | Select-Object CsProcessors, CsTotalPhysicalMemory
+
+workflows:
+  my-workflow:
+    jobs:
+      - build
